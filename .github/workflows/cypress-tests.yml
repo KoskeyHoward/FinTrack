@@ -47,8 +47,17 @@ jobs:
         if: always()  # Run even if tests fail
         run: |
           npm run report:clean
-          npm run report:merge
-          npm run report:generate
+          mkdir -p cypress/reports/mochawesome
+          mkdir -p cypress/reports/html
+          # Only try to merge if files exist
+          if [ "$(find cypress/reports/mochawesome -name '*.json' | wc -l)" -gt 0 ]; then
+            npm run report:merge
+            npm run report:generate
+          else
+            echo "No report files found to merge. Creating empty report."
+            echo '{}' > cypress/reports/mochawesome-merged.json
+            npm run report:generate || echo "Failed to generate report from empty JSON"
+          fi
 
       - name: Upload test results
         if: always()  # Run even if tests fail
@@ -84,10 +93,19 @@ jobs:
       - name: Merge reports from different browsers
         run: |
           mkdir -p cypress/reports/mochawesome
+          mkdir -p cypress/reports/html
+          # Try to copy any existing reports
           cp -r artifacts/cypress-report-*/cypress/reports/mochawesome/* cypress/reports/mochawesome/ || true
           npm install
-          npm run report:merge
-          npm run report:generate
+          # Only try to merge if files exist
+          if [ "$(find cypress/reports/mochawesome -name '*.json' | wc -l)" -gt 0 ]; then
+            npm run report:merge
+            npm run report:generate
+          else
+            echo "No report files found to merge. Creating empty report."
+            echo '{}' > cypress/reports/mochawesome-merged.json
+            npm run report:generate || echo "Failed to generate report from empty JSON"
+          fi
 
       - name: Deploy report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
