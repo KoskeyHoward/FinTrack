@@ -31,6 +31,12 @@ jobs:
       - name: Start server in background
         run: npm start & npx wait-on http://localhost:3000 --timeout 60000
 
+      - name: Create necessary directories
+        run: |
+          mkdir -p cypress/reports/mochawesome
+          mkdir -p cypress/screenshots
+          mkdir -p cypress/videos
+
       - name: Run Cypress tests
         run: npm run cy:run:${{ matrix.browser }}
         env:
@@ -54,6 +60,7 @@ jobs:
             cypress/screenshots
             cypress/videos
           retention-days: 30
+          if-no-files-found: warn  # Don't fail if no files are found
 
   publish-report:
     needs: cypress-run
@@ -97,3 +104,4 @@ jobs:
           name: combined-report
           path: cypress/reports/html
           retention-days: 30
+          if-no-files-found: warn  # Don't fail if no files are found

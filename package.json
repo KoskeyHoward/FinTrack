@@ -179,9 +179,9 @@
   "scripts": {
     "start": "node server.js",
     "cy:open": "cypress open",
-    "cy:run": "cypress run",
-    "cy:run:chrome": "cypress run --browser chrome",
-    "cy:run:firefox": "cypress run --browser firefox",
+    "cy:run": "cypress run --reporter cypress-mochawesome-reporter",
+    "cy:run:chrome": "cypress run --browser chrome --reporter cypress-mochawesome-reporter",
+    "cy:run:firefox": "cypress run --browser firefox --reporter cypress-mochawesome-reporter",
     "test": "npm run cy:run",
     "test:report": "cypress run --reporter cypress-mochawesome-reporter",
     "report:clean": "rm -rf cypress/reports",

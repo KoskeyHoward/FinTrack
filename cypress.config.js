@@ -17,6 +17,6 @@ module.exports = defineConfig({
       inlineAssets: true,
     },
     screenshotOnRunFailure: true,
-    video: false
+    video: true
   },
 });
