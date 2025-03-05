@@ -7,6 +7,12 @@ on:
     branches: [ main, master ]
   workflow_dispatch:  # Allows manual triggering of the workflow
 
+# Add permissions needed for GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
@@ -107,9 +113,19 @@ jobs:
             npm run report:generate || echo "Failed to generate report from empty JSON"
           fi
 
+      - name: Check if reports exist
+        id: check_reports
+        run: |
+          if [ -d "./cypress/reports/html" ] && [ "$(find ./cypress/reports/html -type f | wc -l)" -gt 0 ]; then
+            echo "reports_exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "reports_exist=false" >> $GITHUB_OUTPUT
+            echo "No reports found to deploy to GitHub Pages"
+          fi
+
       - name: Deploy report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && steps.check_reports.outputs.reports_exist == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./cypress/reports/html
