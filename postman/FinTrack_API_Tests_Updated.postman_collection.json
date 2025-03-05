@@ -1,0 +1,469 @@
+{
+  "info": {
+    "name": "FinTrack API Testing",
+    "_postman_id": "fintrack-api-test-2025-03-05",
+    "description": "Postman collection to test the FinTrack API endpoints as per assignment requirements",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Positive Tests",
+      "item": [
+        {
+          "name": "Create Category - Multiple Scenarios",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const testData = [",
+                  "    { name: 'Basic Category', desc: 'Simple description' },",
+                  "    { name: 'MaxLengthName123456789012345', desc: 'Max length test' },",
+                  "    { name: 'Min', desc: '' },",
+                  "    { name: 'Special Ch@r$!', desc: 'Special chars' }",
+                  "];",
+                  "pm.variables.set('testCases', JSON.stringify(testData));",
+                  "pm.variables.set('currentIndex', 0);",
+                  "",
+                  "var testCases = JSON.parse(pm.variables.get('testCases'));",
+                  "var currentIndex = parseInt(pm.variables.get('currentIndex'));",
+                  "var currentData = testCases[currentIndex];",
+                  "pm.variables.set('dynamicBody', JSON.stringify({",
+                  "    name: currentData.name,",
+                  "    description: currentData.desc",
+                  "}));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response matches request data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var testCases = JSON.parse(pm.variables.get('testCases'));",
+                  "    var currentIndex = parseInt(pm.variables.get('currentIndex'));",
+                  "    var currentData = testCases[currentIndex];",
+                  "    pm.expect(jsonData).to.have.property('id').that.is.a('number');",
+                  "    pm.expect(jsonData.name).to.eql(currentData.name);",
+                  "    pm.expect(jsonData.description).to.eql(currentData.desc);",
+                  "});",
+                  "pm.test(\"Response time is less than 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "var currentIndex = parseInt(pm.variables.get('currentIndex'));",
+                  "var testCases = JSON.parse(pm.variables.get('testCases'));",
+                  "if (currentIndex < testCases.length - 1) {",
+                  "    pm.variables.set('currentIndex', currentIndex + 1);",
+                  "    postman.setNextRequest('Create Category - Multiple Scenarios');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{dynamicBody}}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Get Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains category details\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id', 1);",
+                  "    pm.expect(jsonData).to.have.property('name').that.is.a('string');",
+                  "    pm.expect(jsonData).to.have.property('description').that.is.a('string');",
+                  "});",
+                  "pm.test(\"Response time is less than 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response matches updated data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id', 1);",
+                  "    pm.expect(jsonData.name).to.eql('Updated Category Name');",
+                  "    pm.expect(jsonData.description).to.eql('Updated Description');",
+                  "});",
+                  "pm.test(\"Response time is less than 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Category Name\",\n  \"description\": \"Updated Description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "pm.test(\"Response body is empty\", function () {",
+                  "    pm.expect(pm.response.text()).to.be.empty;",
+                  "});",
+                  "pm.test(\"Response time is less than 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Transactions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns transaction array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData[0]).to.have.property('id').that.is.a('number');",
+                  "    pm.expect(jsonData[0]).to.have.property('categoryId', 1);",
+                  "    pm.expect(jsonData[0]).to.have.property('amount').that.is.a('number');",
+                  "    pm.expect(jsonData[0]).to.have.property('date').that.is.a('string');",
+                  "    pm.expect(jsonData[0]).to.have.property('description').that.is.a('string');",
+                  "});",
+                  "pm.test(\"Response time is less than 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "Calculate Spending - Date Range Variations",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const dateRanges = [",
+                  "    { start: '2025-01-01', end: '2025-03-31', desc: 'Quarter' },",
+                  "    { start: '2025-03-05', end: '2025-03-05', desc: 'Single day' },",
+                  "    { start: '2025-01-01', end: '2025-12-31', desc: 'Full year' },",
+                  "    { start: '2024-12-31', end: '2025-01-01', desc: 'Cross-year' }",
+                  "];",
+                  "pm.variables.set('dateRanges', JSON.stringify(dateRanges));",
+                  "pm.variables.set('dateIndex', 0);",
+                  "",
+                  "var dateRanges = JSON.parse(pm.variables.get('dateRanges'));",
+                  "var dateIndex = parseInt(pm.variables.get('dateIndex'));",
+                  "var currentRange = dateRanges[dateIndex];",
+                  "pm.variables.set('startDate', currentRange.start);",
+                  "pm.variables.set('endDate', currentRange.end);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns valid spending data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('categoryId', 1);",
+                  "    pm.expect(jsonData).to.have.property('totalSpending').that.is.a('number');",
+                  "});",
+                  "pm.test(\"Response time is less than 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "var dateIndex = parseInt(pm.variables.get('dateIndex'));",
+                  "var dateRanges = JSON.parse(pm.variables.get('dateRanges'));",
+                  "if (dateIndex < dateRanges.length - 1) {",
+                  "    pm.variables.set('dateIndex', dateIndex + 1);",
+                  "    postman.setNextRequest('Calculate Spending - Date Range Variations');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}/spending?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}", "spending"],
+              "query": [
+                { "key": "startDate", "value": "{{startDate}}" },
+                { "key": "endDate", "value": "{{endDate}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negative Tests",
+      "item": [
+        {
+          "name": "Create Category - Empty Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Error message for empty name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.include('Name is required');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"description\": \"Test Description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category - Overlong Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Error message for overlong name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.include('Name exceeds maximum length');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ThisNameIsWayTooLongToBeAcceptedByAnyReasonableAPI1234567890\",\n  \"description\": \"Test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Get Category - Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Error message for invalid ID\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.include('Invalid ID format');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories/invalid-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "invalid-id"]
+            }
+          }
+        },
+        {
+          "name": "Update Category - Unauthorized",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Error message for unauthorized access\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.include('Unauthorized');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Update\",\n  \"description\": \"No Auth\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Calculate Spending - Missing Dates",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Error message for missing dates\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.include('dates are required');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}/spending",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}", "spending"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "description": "Base URL of the FinTrack API (assumed)"
+    },
+    {
+      "key": "categoryId",
+      "value": "1",
+      "description": "Sample category ID"
+    }
+  ]
+}
