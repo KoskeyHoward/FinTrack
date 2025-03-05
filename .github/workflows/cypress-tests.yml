@@ -1,0 +1,99 @@
+name: Cypress Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false  # Don't fail fast to get results from all browsers
+      matrix:
+        browser: [chrome, firefox]  # Run tests in both Chrome and Firefox
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start server in background
+        run: npm start & npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run Cypress tests
+        run: npm run cy:run:${{ matrix.browser }}
+        env:
+          CYPRESS_REPORTER: cypress-mochawesome-reporter
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Mochawesome report
+        if: always()  # Run even if tests fail
+        run: |
+          npm run report:clean
+          npm run report:merge
+          npm run report:generate
+
+      - name: Upload test results
+        if: always()  # Run even if tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-report-${{ matrix.browser }}
+          path: |
+            cypress/reports
+            cypress/screenshots
+            cypress/videos
+          retention-days: 30
+
+  publish-report:
+    needs: cypress-run
+    if: always()  
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Merge reports from different browsers
+        run: |
+          mkdir -p cypress/reports/mochawesome
+          cp -r artifacts/cypress-report-*/cypress/reports/mochawesome/* cypress/reports/mochawesome/ || true
+          npm ci
+          npm run report:merge
+          npm run report:generate
+
+      - name: Deploy report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./cypress/reports/html
+          destination_dir: reports/${{ github.run_number }}
+          keep_files: true
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-report
+          path: cypress/reports/html
+          retention-days: 30

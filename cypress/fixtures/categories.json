@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "name": "Groceries",
+    "description": "Monthly grocery expenses"
+  },
+  {
+    "id": 2,
+    "name": "Entertainment",
+    "description": "Movies and activities"
+  },
+  {
+    "id": 3,
+    "name": "Transportation",
+    "description": "Public transport and taxi fares"
+  }
+]
